@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { insert, update, read } from '../services/apiService';
+import { insert, update, read, remove } from '../services/apiService';
 
 const Course = ({ match, history }) => {
 
@@ -21,7 +21,7 @@ const Course = ({ match, history }) => {
     function changeHandler(e) {
         setCourse({
             ...course,
-            [e.target.name]: [e.target.value]
+            [e.target.name]: e.target.value
         });
     }
 
@@ -30,7 +30,22 @@ const Course = ({ match, history }) => {
     }
 
     const save = () => {
+        const x = document.getElementById("validation-field-name");
+        if (validateName(course)) {
+            x.style.display = "block";
+            return;
+        }
+        x.style.display = "none";
+
+        const y = document.getElementById("validation-field-points");
+        if (validatePoints(course)) {
+            y.style.display = "block";
+            return;
+        }
+        y.style.display = "none";
+
         if(id === '0') {
+            course._id = undefined;
             insert('courses', course, data => {
                 if(data) return history.push('/courses');
                 console.log('There was error during save data');
@@ -41,6 +56,28 @@ const Course = ({ match, history }) => {
                 console.log('There was error during save data');
             })
         }
+    }
+
+    const del = () => {
+        remove('courses', id, data => {
+            history.push('/courses');
+        })
+    }
+
+    const validateName = (course) => {
+        if (!course.name.trim() || course.name.trim() === "") {
+         return true;
+     } else {
+         return false;
+     }
+    }
+
+    const validatePoints = (course) => {
+        if (!course.points || course.points <= 0) {
+         return true;
+     } else {
+         return false;
+     }
     }
 
     return (
@@ -54,6 +91,7 @@ const Course = ({ match, history }) => {
                        value={course.name}
                        onChange={changeHandler} />
             </div>
+            <p id="validation-field-name" style={{color:'red'}} hidden>This field is required</p>
             <div style={{margin:'12px 0'}}>
                 <label htmlFor='points'>Course points: </label>
                 <input type='text'
@@ -61,10 +99,13 @@ const Course = ({ match, history }) => {
                         value={course.points}
                         onChange={changeHandler} />
             </div>
+            <p id="validation-field-points" style={{color:'red'}} hidden>This field is required</p>
             <hr />
+            {id !== '0' && (
             <div className='left'>
-                <button type='button'>DELETE</button>
+                <button type='button' onClick={del}>DELETE</button>
             </div>
+            )}
             <div className='right'>
                 <button type='button' onClick={back}>BACK</button>
                 &nbsp;&nbsp;
